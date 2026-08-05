@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AddProductForm from "../components/products/AddProductForm";
+import ProductList from "../components/products/ProductsList";
 
 interface Store {
   id: string;
@@ -54,7 +55,12 @@ function ManageStore() {
         </div>
       )}
 
-    {store && <AddProductForm storeId={store.id} />}
+     {store && (
+  <>
+    <AddProductForm storeId={store.id} />
+    <ProductList storeId={store.id} />
+  </>
+)}
     </div>
   );
 }
