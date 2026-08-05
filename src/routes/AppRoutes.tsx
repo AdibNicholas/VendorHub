@@ -13,6 +13,7 @@ import VendorDashboard from "../pages/VendorDashboard";
 import MarketerDashboard from "../pages/MarketerDashboard";
 import DeliveryDashboard from "../pages/DeliveryDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
+import ManageStore from "../pages/ManageStore";
 
 
 function AppRoutes() {
@@ -66,6 +67,14 @@ function AppRoutes() {
   element={
     <ProtectedRoute allowedRole="admin">
       <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/store/:id"
+  element={
+    <ProtectedRoute allowedRole="vendor">
+      <ManageStore />
     </ProtectedRoute>
   }
 />

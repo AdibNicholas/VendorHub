@@ -43,14 +43,17 @@ function StoreList() {
       {stores.length === 0 ? (
         <p className="text-gray-500">No stores created yet.</p>
       ) : (
-        stores.map((store) => (
-          <StoreCard
-            key={store.id}
-            name={store.name}
-            description={store.description}
-            category={store.category}
-          />
-        ))
+        <div className="space-y-4">
+          {stores.map((store) => (
+            <StoreCard
+              key={store.id}
+              id={store.id}
+              name={store.name}
+              description={store.description}
+              category={store.category}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
