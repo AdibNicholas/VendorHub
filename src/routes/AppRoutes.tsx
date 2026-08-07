@@ -14,7 +14,9 @@ import MarketerDashboard from "../pages/MarketerDashboard";
 import DeliveryDashboard from "../pages/DeliveryDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
 import ManageStore from "../pages/ManageStore";
-
+import StorePage from "../pages/StorePage";
+import ProductPage from "../pages/ProductPage";
+import CartPage from "../pages/CartPage";
 
 function AppRoutes() {
   return (
@@ -26,6 +28,9 @@ function AppRoutes() {
       <Route path="/contact" element={<Contacts />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/store/:id" element={<StorePage />} />
+      <Route path="/product/:id" element={<ProductPage />} />
+      <Route path="/cart" element={<CartPage />} />
      <Route
   path="/customer"
   element={
