@@ -28,13 +28,22 @@ function ProtectedRoute({
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, status")
       .eq("id", user.id)
       .single();
 
-    if (profile?.role === allowedRole) {
+    if (error) {
+      console.error("Error checking access:", error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (
+      profile?.role === allowedRole &&
+      profile?.status === "active"
+    ) {
       setAuthorized(true);
     }
 

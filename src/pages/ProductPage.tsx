@@ -16,14 +16,19 @@ interface Product {
 
 function ProductPage() {
   const { id } = useParams();
-const { addToCart } = useCart();
+
+  const { addToCart } = useCart();
+
   const [product, setProduct] = useState<Product | null>(null);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     fetchProduct();
   }, [id]);
 
   const fetchProduct = async () => {
+    if (!id) return;
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -36,6 +41,24 @@ const { addToCart } = useCart();
     }
 
     setProduct(data);
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+addToCart({
+  id: product.id,
+  name: product.name,
+  price: product.price,
+  quantity: 1,
+  store_id: product.store_id,
+})
+
+    setAdded(true);
+
+    setTimeout(() => {
+      setAdded(false);
+    }, 2000);
   };
 
   if (!product) {
@@ -54,10 +77,14 @@ const { addToCart } = useCart();
 
         <div className="grid md:grid-cols-2 gap-10">
 
+          {/* Product Image */}
           <div className="bg-gray-200 rounded-xl h-96 flex items-center justify-center">
-            Product Image
+            <span className="text-gray-500">
+              Product Image
+            </span>
           </div>
 
+          {/* Product Information */}
           <div>
 
             <h1 className="text-4xl font-bold">
@@ -73,37 +100,42 @@ const { addToCart } = useCart();
             </p>
 
             <p className="mt-3">
-              Category:
+              Category:{" "}
               <span className="font-semibold">
-                {" "}
                 {product.category}
               </span>
             </p>
 
             <p className="mt-2">
-              Stock:
+              Stock:{" "}
               <span className="font-semibold">
-                {" "}
                 {product.stock}
               </span>
             </p>
 
             <button
-  onClick={() =>
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-    })
-  }
-  className="mt-8 bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700"
->
-  Add to Cart
-</button>
+              onClick={handleAddToCart}
+              disabled={product.stock <= 0}
+              className={`mt-8 px-8 py-4 rounded-lg text-white ${
+                product.stock <= 0
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-700"
+              }`}
+            >
+              {product.stock <= 0
+                ? "Out of Stock"
+                : added
+                ? "✓ Added to Cart"
+                : "Add to Cart"}
+            </button>
+
+            {added && (
+              <p className="mt-3 text-emerald-600 font-medium">
+                Product added to your cart!
+              </p>
+            )}
 
           </div>
-
         </div>
 
       </div>

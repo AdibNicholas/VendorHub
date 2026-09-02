@@ -58,7 +58,7 @@ function ManageStore() {
      {store && (
   <>
     <AddProductForm storeId={store.id} />
-    <ProductList storeId={store.id} />
+<ProductList />
   </>
 )}
     </div>

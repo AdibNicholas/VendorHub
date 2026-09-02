@@ -1,3 +1,4 @@
+//import { useEffect, useState } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import EditProductForm from "./EditProductForm";
@@ -26,14 +27,12 @@ function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [editingProduct, setEditingProduct] =
     useState<Product | null>(null);
-
-  const [search, setSearch] = useState("");
-  const [storeFilter, setStoreFilter] = useState("all");
-  const [stockFilter, setStockFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+    const [search, setSearch] = useState("");
+const [storeFilter, setStoreFilter] = useState("all");
+const [stockFilter, setStockFilter] = useState("all");
+const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchProducts();
@@ -53,11 +52,12 @@ function ProductList() {
       return;
     }
 
-    const { data: storeData, error: storeError } = await supabase
-      .from("stores")
-      .select("id, name")
-      .eq("vendor_id", user.id)
-      .order("name");
+    const { data: storeData, error: storeError } =
+      await supabase
+        .from("stores")
+        .select("id, name")
+        .eq("vendor_id", user.id)
+        .order("name");
 
     if (storeError) {
       console.error("Error loading stores:", storeError);
@@ -66,6 +66,7 @@ function ProductList() {
     }
 
     const vendorStores = storeData || [];
+
     setStores(vendorStores);
 
     if (vendorStores.length === 0) {
@@ -74,17 +75,24 @@ function ProductList() {
       return;
     }
 
-    const storeIds = vendorStores.map((store) => store.id);
+    const storeIds = vendorStores.map(
+      (store) => store.id
+    );
 
     const { data: productData, error: productError } =
       await supabase
         .from("products")
         .select("*")
         .in("store_id", storeIds)
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false,
+        });
 
     if (productError) {
-      console.error("Error loading products:", productError);
+      console.error(
+        "Error loading products:",
+        productError
+      );
       setLoading(false);
       return;
     }
@@ -92,60 +100,65 @@ function ProductList() {
     setProducts(productData || []);
     setLoading(false);
   };
+  const filteredProducts = useMemo(() => {
+  return products.filter((product) => {
+    const searchText = search.toLowerCase().trim();
+
+    const matchesSearch =
+      searchText === "" ||
+      product.name.toLowerCase().includes(searchText) ||
+      (product.category || "")
+        .toLowerCase()
+        .includes(searchText);
+
+    const matchesStore =
+      storeFilter === "all" ||
+      product.store_id === storeFilter;
+
+    let matchesStock = true;
+
+    if (stockFilter === "in-stock") {
+      matchesStock = product.stock > 0;
+    }
+
+    if (stockFilter === "low-stock") {
+      matchesStock =
+        product.stock > 0 && product.stock <= 5;
+    }
+
+    if (stockFilter === "out-of-stock") {
+      matchesStock = product.stock === 0;
+    }
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" &&
+        product.is_active) ||
+      (statusFilter === "inactive" &&
+        !product.is_active);
+
+    return (
+      matchesSearch &&
+      matchesStore &&
+      matchesStock &&
+      matchesStatus
+    );
+  });
+}, [
+  products,
+  search,
+  storeFilter,
+  stockFilter,
+  statusFilter,
+]);
 
   const getStoreName = (storeId: string) => {
-    const store = stores.find((store) => store.id === storeId);
+    const store = stores.find(
+      (store) => store.id === storeId
+    );
+
     return store?.name || "Unknown Store";
   };
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        (product.category || "")
-          .toLowerCase()
-          .includes(search.toLowerCase());
-
-      const matchesStore =
-        storeFilter === "all" ||
-        product.store_id === storeFilter;
-
-      let matchesStock = true;
-
-      if (stockFilter === "in-stock") {
-        matchesStock = product.stock > 0;
-      }
-
-      if (stockFilter === "low-stock") {
-        matchesStock =
-          product.stock > 0 && product.stock <= 5;
-      }
-
-      if (stockFilter === "out-of-stock") {
-        matchesStock = product.stock === 0;
-      }
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && product.is_active) ||
-        (statusFilter === "inactive" && !product.is_active);
-
-      return (
-        matchesSearch &&
-        matchesStore &&
-        matchesStock &&
-        matchesStatus
-      );
-    });
-  }, [
-    products,
-    search,
-    storeFilter,
-    stockFilter,
-    statusFilter,
-  ]);
 
   const toggleProductStatus = async (
     product: Product
@@ -160,8 +173,15 @@ function ProductList() {
       .eq("id", product.id);
 
     if (error) {
-      console.error("Error updating product:", error);
-      alert(`Unable to update product: ${error.message}`);
+      console.error(
+        "Error updating product:",
+        error
+      );
+
+      alert(
+        `Unable to update product: ${error.message}`
+      );
+
       return;
     }
 
@@ -177,7 +197,9 @@ function ProductList() {
     );
   };
 
-  const deleteProduct = async (product: Product) => {
+  const deleteProduct = async (
+    product: Product
+  ) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${product.name}"?`
     );
@@ -190,8 +212,15 @@ function ProductList() {
       .eq("id", product.id);
 
     if (error) {
-      console.error("Error deleting product:", error);
-      alert(`Unable to delete product: ${error.message}`);
+      console.error(
+        "Error deleting product:",
+        error
+      );
+
+      alert(
+        `Unable to delete product: ${error.message}`
+      );
+
       return;
     }
 
@@ -204,6 +233,11 @@ function ProductList() {
     alert("Product deleted successfully.");
   };
 
+  /*
+   * EDIT PRODUCT SCREEN
+   *
+   * This MUST be outside fetchProducts().
+   */
   if (editingProduct) {
     return (
       <EditProductForm
@@ -231,8 +265,7 @@ function ProductList() {
 
   return (
     <div className="bg-white shadow rounded-xl p-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold">
             My Products
@@ -244,139 +277,103 @@ function ProductList() {
         </div>
 
         <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-semibold">
-          {filteredProducts.length} of {products.length} Products
+        {filteredProducts.length} of {products.length} Products
         </div>
       </div>
-
-      {/* Filters */}
       <div className="bg-gray-50 border rounded-xl p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-          {/* Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Products
-            </label>
+    {/* Search */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Search Products
+      </label>
 
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search by name or category..."
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search by name or category..."
+        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      />
+    </div>
 
-          {/* Store */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Store
-            </label>
+    {/* Store */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Store
+      </label>
 
-            <select
-              value={storeFilter}
-              onChange={(e) =>
-                setStoreFilter(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="all">
-                All Stores
-              </option>
+      <select
+        value={storeFilter}
+        onChange={(e) => setStoreFilter(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      >
+        <option value="all">All Stores</option>
 
-              {stores.map((store) => (
-                <option
-                  key={store.id}
-                  value={store.id}
-                >
-                  {store.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {stores.map((store) => (
+          <option key={store.id} value={store.id}>
+            {store.name}
+          </option>
+        ))}
+      </select>
+    </div>
 
-          {/* Stock */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Stock
-            </label>
+    {/* Stock */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Stock
+      </label>
 
-            <select
-              value={stockFilter}
-              onChange={(e) =>
-                setStockFilter(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="all">
-                All Stock
-              </option>
+      <select
+        value={stockFilter}
+        onChange={(e) => setStockFilter(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      >
+        <option value="all">All Stock</option>
+        <option value="in-stock">In Stock</option>
+        <option value="low-stock">Low Stock</option>
+        <option value="out-of-stock">Out of Stock</option>
+      </select>
+    </div>
 
-              <option value="in-stock">
-                In Stock
-              </option>
+    {/* Status */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Status
+      </label>
 
-              <option value="low-stock">
-                Low Stock
-              </option>
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      >
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
 
-              <option value="out-of-stock">
-                Out of Stock
-              </option>
-            </select>
-          </div>
+  </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
+  {(search ||
+    storeFilter !== "all" ||
+    stockFilter !== "all" ||
+    statusFilter !== "all") && (
+    <button
+      onClick={() => {
+        setSearch("");
+        setStoreFilter("all");
+        setStockFilter("all");
+        setStatusFilter("all");
+      }}
+      className="mt-4 text-sm text-emerald-600 font-semibold hover:text-emerald-700"
+    >
+      Clear all filters
+    </button>
+  )}
+</div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value)
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="all">
-                All Status
-              </option>
-
-              <option value="active">
-                Active
-              </option>
-
-              <option value="inactive">
-                Inactive
-              </option>
-            </select>
-          </div>
-
-        </div>
-
-        {/* Clear filters */}
-        {(search ||
-          storeFilter !== "all" ||
-          stockFilter !== "all" ||
-          statusFilter !== "all") && (
-          <button
-            onClick={() => {
-              setSearch("");
-              setStoreFilter("all");
-              setStockFilter("all");
-              setStatusFilter("all");
-            }}
-            className="mt-4 text-sm text-emerald-600 font-semibold hover:text-emerald-700"
-          >
-            Clear all filters
-          </button>
-        )}
-      </div>
-
-      {/* No products */}
       {products.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">
@@ -388,26 +385,26 @@ function ProductList() {
             create your first product.
           </p>
         </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            No products match your filters.
-          </p>
+     ) : filteredProducts.length === 0 ? (
+  <div className="text-center py-12">
+    <p className="text-gray-500 text-lg">
+      No products match your filters.
+    </p>
 
-          <button
-            onClick={() => {
-              setSearch("");
-              setStoreFilter("all");
-              setStockFilter("all");
-              setStatusFilter("all");
-            }}
-            className="mt-4 text-emerald-600 font-semibold hover:underline"
-          >
-            Clear filters
-          </button>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
+    <button
+      onClick={() => {
+        setSearch("");
+        setStoreFilter("all");
+        setStockFilter("all");
+        setStatusFilter("all");
+      }}
+      className="mt-4 text-emerald-600 font-semibold hover:underline"
+    >
+      Clear filters
+    </button>
+  </div>
+) : (
+  <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b text-left">
@@ -442,15 +439,13 @@ function ProductList() {
             </thead>
 
             <tbody>
-              {filteredProducts.map((product) => (
+             {filteredProducts.map((product) => (
                 <tr
                   key={product.id}
                   className="border-b last:border-b-0 hover:bg-gray-50"
                 >
-                  {/* Product */}
                   <td className="py-4 px-3">
                     <div className="flex items-center gap-3">
-
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -474,18 +469,17 @@ function ProductList() {
                           </p>
                         )}
                       </div>
-
                     </div>
                   </td>
 
-                  {/* Store */}
                   <td className="py-4 px-3">
                     <span className="text-sm">
-                      {getStoreName(product.store_id)}
+                      {getStoreName(
+                        product.store_id
+                      )}
                     </span>
                   </td>
 
-                  {/* Category */}
                   <td className="py-4 px-3">
                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
                       {product.category ||
@@ -493,7 +487,6 @@ function ProductList() {
                     </span>
                   </td>
 
-                  {/* Price */}
                   <td className="py-4 px-3 font-semibold">
                     Le{" "}
                     {Number(
@@ -501,7 +494,6 @@ function ProductList() {
                     ).toLocaleString()}
                   </td>
 
-                  {/* Stock */}
                   <td className="py-4 px-3">
                     <span
                       className={
@@ -516,11 +508,12 @@ function ProductList() {
                     </span>
                   </td>
 
-                  {/* Status */}
                   <td className="py-4 px-3">
                     <button
                       onClick={() =>
-                        toggleProductStatus(product)
+                        toggleProductStatus(
+                          product
+                        )
                       }
                       className={
                         product.is_active
@@ -534,13 +527,13 @@ function ProductList() {
                     </button>
                   </td>
 
-                  {/* Actions */}
                   <td className="py-4 px-3">
                     <div className="flex gap-2">
-
                       <button
                         onClick={() =>
-                          setEditingProduct(product)
+                          setEditingProduct(
+                            product
+                          )
                         }
                         className="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm hover:bg-blue-200"
                       >
@@ -549,13 +542,14 @@ function ProductList() {
 
                       <button
                         onClick={() =>
-                          deleteProduct(product)
+                          deleteProduct(
+                            product
+                          )
                         }
                         className="bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm hover:bg-red-200"
                       >
                         Delete
                       </button>
-
                     </div>
                   </td>
                 </tr>

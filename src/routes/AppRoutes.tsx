@@ -17,7 +17,15 @@ import ManageStore from "../pages/ManageStore";
 import StorePage from "../pages/StorePage";
 import ProductPage from "../pages/ProductPage";
 import CartPage from "../pages/CartPage";
-
+import Checkout from "../pages/Checkout";
+import OrderSuccess from "../pages/OrderSuccess";
+import Account from "../pages/Account";
+import Orders from "../pages/Orders";
+import VendorOrders from "../pages/VendorOrders";
+import AdminUsers from "../pages/AdminUsers";
+import AdminVendors from "../pages/AdminVendors";
+import AdminVendorDetails from "../pages/AdminVendorDetails";
+import AdminProducts from "../pages/AdminProducts";
 function AppRoutes() {
   return (
     <Routes>
@@ -31,6 +39,7 @@ function AppRoutes() {
       <Route path="/store/:id" element={<StorePage />} />
       <Route path="/product/:id" element={<ProductPage />} />
       <Route path="/cart" element={<CartPage />} />
+      
      <Route
   path="/customer"
   element={
@@ -45,6 +54,14 @@ function AppRoutes() {
   element={
     <ProtectedRoute allowedRole="vendor">
       <VendorDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/vendor/orders"
+  element={
+    <ProtectedRoute allowedRole="vendor">
+      <VendorOrders />
     </ProtectedRoute>
   }
 />
@@ -76,6 +93,38 @@ function AppRoutes() {
   }
 />
 <Route
+  path="/admin/users"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminUsers />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/vendors"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminVendors />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/vendors/:id"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminVendorDetails />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/products"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminProducts />
+    </ProtectedRoute>
+  }
+/>
+<Route
   path="/store/:id"
   element={
     <ProtectedRoute allowedRole="vendor">
@@ -83,6 +132,23 @@ function AppRoutes() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/checkout"
+  element={<Checkout />}
+/>
+<Route
+  path="/order-success/:id"
+  element={<OrderSuccess />}
+/>
+<Route
+  path="/orders"
+  element={<Orders />}
+/>
+<Route
+  path="/account"
+  element={<Account />}
+/>
+
     </Routes>
   );
 }

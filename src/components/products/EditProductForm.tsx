@@ -2,38 +2,38 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-
 interface EditProductFormProps {
   product: {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
     price: number;
     stock: number;
-    category: string;
+    category: string | null;
   };
+
+  onUpdated: () => void;
   onCancel: () => void;
-  onSaved: () => void;
 }
 
 function EditProductForm({
   product,
+  onUpdated,
   onCancel,
-  onSaved,
-}: EditProductFormProps) 
-{
+}: EditProductFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [category, setCategory] = useState("");
+  
 
   useEffect(() => {
     setName(product.name);
-    setDescription(product.description);
+   setDescription(product.description ?? "");
     setPrice(product.price.toString());
     setStock(product.stock.toString());
-    setCategory(product.category);
+    setCategory(product.category ?? "");
   }, [product]);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -48,15 +48,15 @@ function EditProductForm({
       category,
     })
     .eq("id", product.id);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
+if (error) {
+  console.error(error);
+  alert(error.message);
+  return;
+}
 
   alert("Product updated successfully!");
 
-  onSaved();
+onUpdated();
 };
 
   return (
@@ -100,13 +100,12 @@ function EditProductForm({
         />
 
         <div className="flex gap-4">
-          <button
-            type="button"
-            className="bg-gray-500 text-white px-6 py-3 rounded-lg"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
+         <button
+  type="button"
+  onClick={onCancel}
+>
+  Cancel
+</button>
 
           <button
             type="submit"
