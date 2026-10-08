@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import SupportButton from "./SupportButton";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,6 +15,8 @@ function Layout({ children }: LayoutProps) {
       <main className="min-h-screen">
         {children}
       </main>
+
+      <SupportButton />
 
       <Footer />
     </>

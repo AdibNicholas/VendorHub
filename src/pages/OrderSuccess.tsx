@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import Layout from "../components/layout/Layout";
 import { supabase } from "../lib/supabase";
 
 interface Order {
@@ -45,11 +44,12 @@ function OrderSuccess() {
 
     try {
       // Get the order
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data: orderData, error: orderError } =
+        await supabase
+          .from("orders")
+          .select("*")
+          .eq("id", id)
+          .single();
 
       if (orderError) {
         console.error("Error loading order:", orderError);
@@ -60,15 +60,19 @@ function OrderSuccess() {
       setOrder(orderData);
 
       // Get items belonging to this order
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("order_items")
-        .select(
-          "id, order_id, product_name, price, quantity, subtotal"
-        )
-        .eq("order_id", id);
+      const { data: itemsData, error: itemsError } =
+        await supabase
+          .from("order_items")
+          .select(
+            "id, order_id, product_name, price, quantity, subtotal"
+          )
+          .eq("order_id", id);
 
       if (itemsError) {
-        console.error("Error loading order items:", itemsError);
+        console.error(
+          "Error loading order items:",
+          itemsError
+        );
       } else {
         setOrderItems(itemsData || []);
       }
@@ -89,259 +93,253 @@ function OrderSuccess() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-xl">
-            Loading your order...
-          </p>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl">
+          Loading your order...
+        </p>
+      </div>
     );
   }
 
   if (!order) {
     return (
-      <Layout>
-        <div className="min-h-screen flex flex-col items-center justify-center px-6">
-          <h1 className="text-3xl font-bold">
-            Order Not Found
-          </h1>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6">
+        <h1 className="text-3xl font-bold">
+          Order Not Found
+        </h1>
 
-          <p className="mt-3 text-gray-600">
-            We couldn't find this order.
-          </p>
+        <p className="mt-3 text-gray-600">
+          We couldn't find this order.
+        </p>
 
-          <Link
-            to="/shop"
-            className="mt-6 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700"
-          >
-            Continue Shopping
-          </Link>
-        </div>
-      </Layout>
+        <Link
+          to="/shop"
+          className="mt-6 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700"
+        >
+          Continue Shopping
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-6 py-12">
 
-        {/* Success Message */}
-        <div className="text-center">
+      {/* Success Message */}
+      <div className="text-center">
 
-          <div className="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
-            <span className="text-4xl text-emerald-600">
-              ✓
-            </span>
+        <div className="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
+          <span className="text-4xl text-emerald-600">
+            ✓
+          </span>
+        </div>
+
+        <h1 className="text-4xl font-bold mt-6">
+          Order Placed Successfully!
+        </h1>
+
+        <p className="mt-3 text-gray-600">
+          Thank you for shopping with VendorHub.
+        </p>
+
+      </div>
+
+      {/* Order Details */}
+      <div className="mt-10 bg-white shadow rounded-xl p-6">
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b pb-4">
+
+          <div>
+            <h2 className="text-2xl font-bold">
+              Order Details
+            </h2>
+
+            <p className="text-sm text-gray-500 mt-1 break-all">
+              Order ID: {order.id}
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Date: {formatDate(order.created_at)}
+            </p>
           </div>
 
-          <h1 className="text-4xl font-bold mt-6">
-            Order Placed Successfully!
-          </h1>
-
-          <p className="mt-3 text-gray-600">
-            Thank you for shopping with VendorHub.
-          </p>
+          <span className="px-4 py-2 rounded-full bg-yellow-100 text-yellow-700 capitalize self-start">
+            {order.status}
+          </span>
 
         </div>
 
-        {/* Order Details */}
-        <div className="mt-10 bg-white shadow rounded-xl p-6">
+        {/* Customer Information */}
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
 
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b pb-4">
+          <div>
+            <h3 className="font-bold text-lg">
+              Customer
+            </h3>
 
-            <div>
-              <h2 className="text-2xl font-bold">
-                Order Details
-              </h2>
+            <p className="mt-2">
+              {order.full_name}
+            </p>
 
-              <p className="text-sm text-gray-500 mt-1 break-all">
-                Order ID: {order.id}
-              </p>
+            <p className="text-gray-600">
+              {order.phone}
+            </p>
 
-              <p className="text-sm text-gray-500 mt-1">
-                Date: {formatDate(order.created_at)}
-              </p>
-            </div>
+            <p className="text-gray-600">
+              {order.email}
+            </p>
+          </div>
 
-            <span className="px-4 py-2 rounded-full bg-yellow-100 text-yellow-700 capitalize self-start">
-              {order.status}
+          <div>
+            <h3 className="font-bold text-lg">
+              Delivery Address
+            </h3>
+
+            <p className="mt-2">
+              {order.address}
+            </p>
+
+            <p className="text-gray-600">
+              {order.city}
+            </p>
+          </div>
+
+        </div>
+
+        {/* Order Items */}
+        <div className="mt-8 border-t pt-6">
+
+          <div className="flex justify-between items-center mb-4">
+
+            <h3 className="font-bold text-lg">
+              Items in Your Order
+            </h3>
+
+            <span className="text-sm text-gray-500">
+              {orderItems.length}{" "}
+              {orderItems.length === 1 ? "item" : "items"}
             </span>
 
           </div>
 
-          {/* Customer Information */}
-          <div className="grid md:grid-cols-2 gap-6 mt-6">
+          {orderItems.length === 0 ? (
 
-            <div>
-              <h3 className="font-bold text-lg">
-                Customer
-              </h3>
-
-              <p className="mt-2">
-                {order.full_name}
-              </p>
-
-              <p className="text-gray-600">
-                {order.phone}
-              </p>
-
-              <p className="text-gray-600">
-                {order.email}
+            <div className="bg-gray-50 rounded-lg p-6 text-center">
+              <p className="text-gray-500">
+                No order items found.
               </p>
             </div>
 
-            <div>
-              <h3 className="font-bold text-lg">
-                Delivery Address
-              </h3>
+          ) : (
 
-              <p className="mt-2">
-                {order.address}
-              </p>
+            <div className="space-y-4">
 
-              <p className="text-gray-600">
-                {order.city}
-              </p>
-            </div>
+              {orderItems.map((item) => (
 
-          </div>
+                <div
+                  key={item.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border rounded-lg p-4"
+                >
 
-          {/* Order Items */}
-          <div className="mt-8 border-t pt-6">
+                  <div>
 
-            <div className="flex justify-between items-center mb-4">
+                    <p className="font-semibold">
+                      {item.product_name}
+                    </p>
 
-              <h3 className="font-bold text-lg">
-                Items in Your Order
-              </h3>
-
-              <span className="text-sm text-gray-500">
-                {orderItems.length}{" "}
-                {orderItems.length === 1 ? "item" : "items"}
-              </span>
-
-            </div>
-
-            {orderItems.length === 0 ? (
-
-              <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <p className="text-gray-500">
-                  No order items found.
-                </p>
-              </div>
-
-            ) : (
-
-              <div className="space-y-4">
-
-                {orderItems.map((item) => (
-
-                  <div
-                    key={item.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border rounded-lg p-4"
-                  >
-
-                    <div>
-
-                      <p className="font-semibold">
-                        {item.product_name}
-                      </p>
-
-                      <p className="text-sm text-gray-500 mt-1">
-                        Le{" "}
-                        {Number(item.price).toLocaleString()}{" "}
-                        × {item.quantity}
-                      </p>
-
-                    </div>
-
-                    <p className="font-bold">
+                    <p className="text-sm text-gray-500 mt-1">
                       Le{" "}
-                      {Number(item.subtotal).toLocaleString()}
+                      {Number(item.price).toLocaleString()}{" "}
+                      × {item.quantity}
                     </p>
 
                   </div>
 
-                ))}
+                  <p className="font-bold">
+                    Le{" "}
+                    {Number(item.subtotal).toLocaleString()}
+                  </p>
 
-              </div>
+                </div>
 
-            )}
-
-          </div>
-
-          {/* Payment */}
-          <div className="mt-8 border-t pt-6">
-
-            <h3 className="font-bold text-lg">
-              Payment
-            </h3>
-
-            <p className="mt-2 capitalize">
-              {order.payment_method.replace("_", " ")}
-            </p>
-
-          </div>
-
-          {/* Totals */}
-          <div className="mt-6 border-t pt-6 space-y-3">
-
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-
-              <span>
-                Le{" "}
-                {Number(order.subtotal).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Delivery Fee</span>
-
-              <span>
-                Le{" "}
-                {Number(order.delivery_fee).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="border-t pt-4 flex justify-between text-xl font-bold">
-
-              <span>Total</span>
-
-              <span className="text-emerald-600">
-                Le{" "}
-                {Number(order.total).toLocaleString()}
-              </span>
+              ))}
 
             </div>
 
-          </div>
+          )}
 
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+        {/* Payment */}
+        <div className="mt-8 border-t pt-6">
 
-          <Link
-            to="/shop"
-            className="bg-emerald-600 text-white px-8 py-3 rounded-lg text-center hover:bg-emerald-700"
-          >
-            Continue Shopping
-          </Link>
+          <h3 className="font-bold text-lg">
+            Payment
+          </h3>
 
-          <Link
-            to="/orders"
-            className="border border-emerald-600 text-emerald-600 px-8 py-3 rounded-lg text-center hover:bg-emerald-50"
-          >
-            View My Orders
-          </Link>
+          <p className="mt-2 capitalize">
+            {order.payment_method.replace("_", " ")}
+          </p>
+
+        </div>
+
+        {/* Totals */}
+        <div className="mt-6 border-t pt-6 space-y-3">
+
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+
+            <span>
+              Le{" "}
+              {Number(order.subtotal).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Delivery Fee</span>
+
+            <span>
+              Le{" "}
+              {Number(order.delivery_fee).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="border-t pt-4 flex justify-between text-xl font-bold">
+
+            <span>Total</span>
+
+            <span className="text-emerald-600">
+              Le{" "}
+              {Number(order.total).toLocaleString()}
+            </span>
+
+          </div>
 
         </div>
 
       </div>
-    </Layout>
+
+      {/* Buttons */}
+      <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+
+        <Link
+          to="/shop"
+          className="bg-emerald-600 text-white px-8 py-3 rounded-lg text-center hover:bg-emerald-700"
+        >
+          Continue Shopping
+        </Link>
+
+        <Link
+          to="/orders"
+          className="border border-emerald-600 text-emerald-600 px-8 py-3 rounded-lg text-center hover:bg-emerald-50"
+        >
+          View My Orders
+        </Link>
+
+      </div>
+
+    </div>
   );
 }
 

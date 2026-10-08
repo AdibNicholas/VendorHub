@@ -26,6 +26,9 @@ import AdminUsers from "../pages/AdminUsers";
 import AdminVendors from "../pages/AdminVendors";
 import AdminVendorDetails from "../pages/AdminVendorDetails";
 import AdminProducts from "../pages/AdminProducts";
+import AdminOrders from "../pages/AdminOrders";
+import Support from "../pages/Support";
+import AdminSupport from "../pages/AdminSupport";
 function AppRoutes() {
   return (
     <Routes>
@@ -45,6 +48,14 @@ function AppRoutes() {
   element={
     <ProtectedRoute allowedRole="customer">
       <CustomerDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/support"
+  element={
+    <ProtectedRoute allowedRole="customer">
+      <Support />
     </ProtectedRoute>
   }
 />
@@ -121,6 +132,22 @@ function AppRoutes() {
   element={
     <ProtectedRoute allowedRole="admin">
       <AdminProducts />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/orders"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminOrders />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/admin/support"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminSupport />
     </ProtectedRoute>
   }
 />

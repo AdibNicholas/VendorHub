@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import Layout from "../components/layout/Layout";
 import { useCart } from "../Context/CartContext";
 
 interface Product {
@@ -16,18 +15,27 @@ interface Product {
 
 function ProductPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
 
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [added, setAdded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    trackReferral();
+  }, [id]);
+
   const fetchProduct = async () => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("products")
@@ -36,23 +44,73 @@ function ProductPage() {
       .single();
 
     if (error) {
-      console.error(error);
+      console.error("Error loading product:", error);
+      setLoading(false);
       return;
     }
 
     setProduct(data);
+    setLoading(false);
+  };
+
+  const trackReferral = async () => {
+    const referralCode = searchParams.get("ref");
+
+    if (!referralCode || !id) {
+      return;
+    }
+
+    const { data: referralLink, error: referralError } =
+      await supabase
+        .from("referral_links")
+        .select("id, product_id, is_active, expires_at")
+        .eq("referral_code", referralCode)
+        .eq("product_id", id)
+        .eq("is_active", true)
+        .single();
+
+    if (referralError || !referralLink) {
+      console.log("Invalid referral link.");
+      return;
+    }
+
+    const expirationDate = new Date(
+      referralLink.expires_at
+    );
+
+    if (expirationDate <= new Date()) {
+      console.log("Referral link has expired.");
+      return;
+    }
+
+    const { error: clickError } = await supabase
+      .from("referral_clicks")
+      .insert({
+        referral_link_id: referralLink.id,
+      });
+
+    if (clickError) {
+      console.error(
+        "Error recording referral click:",
+        clickError.message
+      );
+
+      return;
+    }
+
+    console.log("Referral click recorded successfully.");
   };
 
   const handleAddToCart = () => {
     if (!product) return;
 
-addToCart({
-  id: product.id,
-  name: product.name,
-  price: product.price,
-  quantity: 1,
-  store_id: product.store_id,
-})
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      store_id: product.store_id,
+    });
 
     setAdded(true);
 
@@ -61,19 +119,33 @@ addToCart({
     }, 2000);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-gray-500">
+          Loading product...
+        </p>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
-      <Layout>
-        <div className="max-w-7xl mx-auto p-8">
-          <p>Loading product...</p>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6">
+        <h1 className="text-3xl font-bold">
+          Product Not Found
+        </h1>
+
+        <p className="mt-3 text-gray-600">
+          We couldn't find this product.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto p-8">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-10">
 
         <div className="grid md:grid-cols-2 gap-10">
 
@@ -96,7 +168,8 @@ addToCart({
             </p>
 
             <p className="mt-6 text-3xl font-bold text-emerald-600">
-              Le {product.price}
+              Le{" "}
+              {Number(product.price).toLocaleString()}
             </p>
 
             <p className="mt-3">
@@ -139,7 +212,7 @@ addToCart({
         </div>
 
       </div>
-    </Layout>
+    </div>
   );
 }
 

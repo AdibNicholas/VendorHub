@@ -1,10 +1,11 @@
 import AppRoutes from "./routes/AppRoutes";
+import Layout from "./components/layout/Layout";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <Layout>
       <AppRoutes />
-    </div>
+    </Layout>
   );
 }
 

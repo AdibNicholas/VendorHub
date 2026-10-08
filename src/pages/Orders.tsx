@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Layout from "../components/layout/Layout";
 import { supabase } from "../lib/supabase";
 
 interface Order {
@@ -130,244 +129,240 @@ function Orders() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-xl">
-            Loading your orders...
-          </p>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl">
+          Loading your orders...
+        </p>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-6xl mx-auto px-6 py-10">
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold">
-            My Orders
-          </h1>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold">
+          My Orders
+        </h1>
+
+        <p className="text-gray-600 mt-2">
+          View and track your previous orders.
+        </p>
+      </div>
+
+      {/* No orders */}
+      {orders.length === 0 ? (
+        <div className="bg-white shadow rounded-xl p-10 text-center">
+
+          <div className="text-5xl mb-4">
+            🛍️
+          </div>
+
+          <h2 className="text-2xl font-bold">
+            No Orders Yet
+          </h2>
 
           <p className="text-gray-600 mt-2">
-            View and track your previous orders.
+            You haven't placed any orders yet.
           </p>
+
+          <Link
+            to="/shop"
+            className="inline-block mt-6 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700"
+          >
+            Start Shopping
+          </Link>
+
         </div>
+      ) : (
 
-        {/* No orders */}
-        {orders.length === 0 ? (
-          <div className="bg-white shadow rounded-xl p-10 text-center">
+        <div className="space-y-6">
 
-            <div className="text-5xl mb-4">
-              🛍️
-            </div>
+          {orders.map((order) => {
 
-            <h2 className="text-2xl font-bold">
-              No Orders Yet
-            </h2>
+            const currentStatus =
+              order.status.toLowerCase();
 
-            <p className="text-gray-600 mt-2">
-              You haven't placed any orders yet.
-            </p>
+            const currentIndex =
+              getStatusIndex(currentStatus);
 
-            <Link
-              to="/shop"
-              className="inline-block mt-6 bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700"
-            >
-              Start Shopping
-            </Link>
+            const isCancelled =
+              currentStatus === "cancelled";
 
-          </div>
-        ) : (
+            return (
+              <div
+                key={order.id}
+                className="bg-white shadow rounded-2xl p-6"
+              >
 
-          <div className="space-y-6">
+                {/* Order header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-            {orders.map((order) => {
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Order ID
+                    </p>
 
-              const currentStatus =
-                order.status.toLowerCase();
-
-              const currentIndex =
-                getStatusIndex(currentStatus);
-
-              const isCancelled =
-                currentStatus === "cancelled";
-
-              return (
-                <div
-                  key={order.id}
-                  className="bg-white shadow rounded-2xl p-6"
-                >
-
-                  {/* Order header */}
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Order ID
-                      </p>
-
-                      <p className="font-semibold break-all">
-                        {order.id}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Date
-                      </p>
-
-                      <p className="font-medium">
-                        {formatDate(order.created_at)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Payment
-                      </p>
-
-                      <p className="font-medium capitalize">
-                        {order.payment_method.replace(
-                          "_",
-                          " "
-                        )}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Total
-                      </p>
-
-                      <p className="font-bold text-emerald-600">
-                        Le{" "}
-                        {Number(order.total).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <span
-                      className={`inline-block px-4 py-2 rounded-full font-semibold ${getStatusColor(
-                        order.status
-                      )}`}
-                    >
-                      {formatStatus(order.status)}
-                    </span>
-
+                    <p className="font-semibold break-all">
+                      {order.id}
+                    </p>
                   </div>
 
-                  {/* Tracking */}
-                  {!isCancelled ? (
-                    <div className="mt-8">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Date
+                    </p>
 
-                      <h3 className="font-bold text-lg mb-6">
-                        Order Tracking
-                      </h3>
+                    <p className="font-medium">
+                      {formatDate(order.created_at)}
+                    </p>
+                  </div>
 
-                      <div className="relative">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Payment
+                    </p>
 
-                        {/* Progress line */}
-                        <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200" />
+                    <p className="font-medium capitalize">
+                      {order.payment_method.replace(
+                        "_",
+                        " "
+                      )}
+                    </p>
+                  </div>
 
-                        <div
-                          className="absolute top-5 left-0 h-1 bg-emerald-500 transition-all duration-500"
-                          style={{
-                            width:
-                              currentIndex <= 0
-                                ? "0%"
-                                : `${(
-                                    currentIndex /
-                                    (statuses.length - 1)
-                                  ) * 100}%`,
-                          }}
-                        />
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Total
+                    </p>
 
-                        {/* Steps */}
-                        <div className="relative flex justify-between">
+                    <p className="font-bold text-emerald-600">
+                      Le{" "}
+                      {Number(order.total).toLocaleString()}
+                    </p>
+                  </div>
 
-                          {statuses.map(
-                            (status, index) => {
+                  <span
+                    className={`inline-block px-4 py-2 rounded-full font-semibold ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
+                    {formatStatus(order.status)}
+                  </span>
 
-                              const completed =
-                                index <= currentIndex;
+                </div>
 
-                              return (
+                {/* Tracking */}
+                {!isCancelled ? (
+                  <div className="mt-8">
+
+                    <h3 className="font-bold text-lg mb-6">
+                      Order Tracking
+                    </h3>
+
+                    <div className="relative">
+
+                      {/* Progress line */}
+                      <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200" />
+
+                      <div
+                        className="absolute top-5 left-0 h-1 bg-emerald-500 transition-all duration-500"
+                        style={{
+                          width:
+                            currentIndex <= 0
+                              ? "0%"
+                              : `${(
+                                  currentIndex /
+                                  (statuses.length - 1)
+                                ) * 100}%`,
+                        }}
+                      />
+
+                      {/* Steps */}
+                      <div className="relative flex justify-between">
+
+                        {statuses.map(
+                          (status, index) => {
+
+                            const completed =
+                              index <= currentIndex;
+
+                            return (
+                              <div
+                                key={status}
+                                className="flex flex-col items-center"
+                              >
+
                                 <div
-                                  key={status}
-                                  className="flex flex-col items-center"
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow ${
+                                    completed
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-gray-200 text-gray-500"
+                                  }`}
                                 >
-
-                                  <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow ${
-                                      completed
-                                        ? "bg-emerald-500 text-white"
-                                        : "bg-gray-200 text-gray-500"
-                                    }`}
-                                  >
-                                    {completed
-                                      ? "✓"
-                                      : index + 1}
-                                  </div>
-
-                                  <p
-                                    className={`mt-3 text-sm font-semibold ${
-                                      completed
-                                        ? "text-emerald-600"
-                                        : "text-gray-400"
-                                    }`}
-                                  >
-                                    {formatStatus(status)}
-                                  </p>
-
+                                  {completed
+                                    ? "✓"
+                                    : index + 1}
                                 </div>
-                              );
-                            }
-                          )}
 
-                        </div>
+                                <p
+                                  className={`mt-3 text-sm font-semibold ${
+                                    completed
+                                      ? "text-emerald-600"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  {formatStatus(status)}
+                                </p>
+
+                              </div>
+                            );
+                          }
+                        )}
 
                       </div>
 
                     </div>
-                  ) : (
 
-                    <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-5">
+                  </div>
+                ) : (
 
-                      <p className="font-semibold text-red-700">
-                        This order has been cancelled.
-                      </p>
+                  <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-5">
 
-                      <p className="text-sm text-red-600 mt-1">
-                        Please contact support if you believe
-                        this was a mistake.
-                      </p>
+                    <p className="font-semibold text-red-700">
+                      This order has been cancelled.
+                    </p>
 
-                    </div>
-
-                  )}
-
-                  {/* View order */}
-                  <div className="mt-8 pt-5 border-t flex justify-end">
-
-                    <Link
-                      to={`/order-success/${order.id}`}
-                      className="border border-emerald-600 text-emerald-600 px-5 py-2.5 rounded-lg hover:bg-emerald-50 font-medium"
-                    >
-                      View Order
-                    </Link>
+                    <p className="text-sm text-red-600 mt-1">
+                      Please contact support if you believe
+                      this was a mistake.
+                    </p>
 
                   </div>
 
+                )}
+
+                {/* View order */}
+                <div className="mt-8 pt-5 border-t flex justify-end">
+
+                  <Link
+                    to={`/order-success/${order.id}`}
+                    className="border border-emerald-600 text-emerald-600 px-5 py-2.5 rounded-lg hover:bg-emerald-50 font-medium"
+                  >
+                    View Order
+                  </Link>
+
                 </div>
-              );
-            })}
 
-          </div>
-        )}
+              </div>
+            );
+          })}
 
-      </div>
-    </Layout>
+        </div>
+      )}
+
+    </div>
   );
 }
 

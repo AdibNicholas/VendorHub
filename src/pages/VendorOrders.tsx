@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Layout from "../components/layout/Layout";
 import { supabase } from "../lib/supabase";
 
 interface VendorOrder {
@@ -141,9 +140,11 @@ function VendorOrders() {
 
       if (error) {
         console.error(error);
+
         alert(
           "Unable to update order status."
         );
+
         return;
       }
 
@@ -159,6 +160,7 @@ function VendorOrders() {
       );
     } catch (error) {
       console.error(error);
+
       alert(
         "Unable to update order status."
       );
@@ -169,18 +171,16 @@ function VendorOrders() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="max-w-7xl mx-auto p-8">
-          <p className="text-xl">
-            Loading vendor orders...
-          </p>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl">
+          Loading vendor orders...
+        </p>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-8">
 
         <h1 className="text-4xl font-bold text-emerald-600 mb-8">
@@ -243,9 +243,11 @@ function VendorOrders() {
                     </h3>
 
                     <p>{order.full_name}</p>
+
                     <p className="text-gray-600">
                       {order.phone}
                     </p>
+
                     <p className="text-gray-600">
                       {order.email}
                     </p>
@@ -257,6 +259,7 @@ function VendorOrders() {
                     </h3>
 
                     <p>{order.address}</p>
+
                     <p className="text-gray-600">
                       {order.city}
                     </p>
@@ -318,7 +321,7 @@ function VendorOrders() {
         )}
 
       </div>
-    </Layout>
+    </div>
   );
 }
 
