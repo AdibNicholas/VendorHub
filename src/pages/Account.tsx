@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Check,
+  ChevronRight,
+  LogOut,
+  Mail,
+  Package,
+  Phone,
+  Save,
+  User,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface UserProfile {
@@ -18,6 +28,9 @@ function Account() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchProfile();
@@ -25,6 +38,9 @@ function Account() {
 
   const fetchProfile = async () => {
     try {
+      setLoading(true);
+      setError("");
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -39,10 +55,9 @@ function Account() {
         user.user_metadata?.full_name ||
         "";
 
-      const userPhone =
-        user.user_metadata?.phone || "";
+      const userPhone = user.user_metadata?.phone || "";
 
-      const currentProfile = {
+      const currentProfile: UserProfile = {
         id: user.id,
         email: user.email || "",
         name: userName,
@@ -53,7 +68,8 @@ function Account() {
       setName(userName);
       setPhone(userPhone);
     } catch (error) {
-      console.error(error);
+      console.error("Error loading profile:", error);
+      setError("Unable to load your account information.");
     } finally {
       setLoading(false);
     }
@@ -64,49 +80,57 @@ function Account() {
   ) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      alert("Please enter your name.");
+    setMessage("");
+    setError("");
+
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedName) {
+      setError("Please enter your full name.");
       return;
     }
 
     setSaving(true);
 
     try {
-      const { data, error } =
-        await supabase.auth.updateUser({
-          data: {
-            name: name.trim(),
-            phone: phone.trim(),
-          },
-        });
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          name: trimmedName,
+          phone: trimmedPhone,
+        },
+      });
 
       if (error) {
-        console.error(error);
-
-        alert(
-          "Unable to update your profile: " +
-            error.message
+        console.error("Profile update error:", error);
+        setError(
+          "Unable to update your profile: " + error.message
         );
-
         return;
       }
 
       if (data.user) {
+        const updatedName =
+          data.user.user_metadata?.name || "";
+
+        const updatedPhone =
+          data.user.user_metadata?.phone || "";
+
         setProfile({
           id: data.user.id,
           email: data.user.email || "",
-          name:
-            data.user.user_metadata?.name || "",
-          phone:
-            data.user.user_metadata?.phone || "",
+          name: updatedName,
+          phone: updatedPhone,
         });
+
+        setName(updatedName);
+        setPhone(updatedPhone);
       }
 
-      alert("Profile updated successfully!");
+      setMessage("Profile updated successfully.");
     } catch (error) {
-      console.error(error);
-
-      alert(
+      console.error("Profile update error:", error);
+      setError(
         "Something went wrong while updating your profile."
       );
     } finally {
@@ -115,16 +139,39 @@ function Account() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    setLoggingOut(true);
+    setError("");
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Logout error:", error);
+        setError("Unable to log out. Please try again.");
+        setLoggingOut(false);
+        return;
+      }
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      setError("Something went wrong while logging out.");
+      setLoggingOut(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl">
-          Loading account...
-        </p>
+      <div className="min-h-screen bg-gray-50 px-4 py-10">
+        <div className="mx-auto max-w-5xl animate-pulse">
+          <div className="mb-8 h-9 w-48 rounded-lg bg-gray-200" />
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="h-72 rounded-2xl bg-white shadow-sm" />
+
+            <div className="h-96 rounded-2xl bg-white shadow-sm md:col-span-2" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -133,135 +180,231 @@ function Account() {
     return null;
   }
 
+  const initials = profile.name
+    ? profile.name
+        .split(" ")
+        .map((part) => part.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "U";
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-600">
+              <User size={22} />
+            </div>
 
-      <h1 className="text-4xl font-bold mb-8">
-        My Account
-      </h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                My Account
+              </h1>
 
-      <div className="grid md:grid-cols-3 gap-6">
-
-        {/* Account Menu */}
-        <div className="bg-white shadow rounded-xl p-6 h-fit">
-
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-            <span className="text-3xl font-bold text-emerald-600">
-              {profile.name
-                ? profile.name.charAt(0).toUpperCase()
-                : "U"}
-            </span>
-          </div>
-
-          <h2 className="text-xl font-bold text-center mt-4">
-            {profile.name || "VendorHub Customer"}
-          </h2>
-
-          <p className="text-gray-500 text-center text-sm break-all">
-            {profile.email}
-          </p>
-
-          <div className="mt-6 space-y-2">
-
-            <Link
-              to="/orders"
-              className="block w-full px-4 py-3 rounded-lg hover:bg-emerald-50 hover:text-emerald-600"
-            >
-              📦 My Orders
-            </Link>
-
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 hover:text-red-600"
-            >
-              🚪 Logout
-            </button>
-
+              <p className="mt-1 text-gray-600">
+                Manage your personal information and account.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Editable Profile */}
-        <div className="md:col-span-2 bg-white shadow rounded-xl p-6">
-
-          <h2 className="text-2xl font-bold mb-6">
-            Profile Information
-          </h2>
-
-          <form
-            onSubmit={handleSave}
-            className="space-y-5"
-          >
-
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
-                placeholder="Enter your full name"
-                className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                required
-              />
+        {/* Messages */}
+        {message && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100">
+              <Check size={17} />
             </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Email Address
-              </label>
+            <p className="font-medium">{message}</p>
+          </div>
+        )}
 
-              <input
-                type="email"
-                value={profile.email}
-                disabled
-                className="w-full border rounded-lg p-3 bg-gray-100 text-gray-500 cursor-not-allowed"
-              />
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="font-semibold text-red-700">
+              {error}
+            </p>
+          </div>
+        )}
 
-              <p className="text-xs text-gray-500 mt-2">
-                Email changes are disabled for now.
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Account Summary */}
+          <aside className="h-fit overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="bg-red-600 px-6 py-8 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-2xl font-bold text-red-600 shadow-sm">
+                {initials}
+              </div>
+
+              <h2 className="mt-4 break-words text-xl font-bold text-white">
+                {profile.name || "VendorHub Customer"}
+              </h2>
+
+              <p className="mt-1 break-all text-sm text-red-100">
+                {profile.email}
               </p>
             </div>
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Phone Number
-              </label>
+            <div className="p-4">
+              <Link
+                to="/orders"
+                className="flex items-center justify-between rounded-xl px-4 py-3.5 text-gray-700 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <span className="flex items-center gap-3 font-medium">
+                  <Package size={19} />
+                  My Orders
+                </span>
 
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
-                }
-                placeholder="e.g. 076123456"
-                className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+                <ChevronRight size={18} />
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="mt-1 flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-medium text-gray-700 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="flex items-center gap-3">
+                  <LogOut size={19} />
+
+                  {loggingOut
+                    ? "Logging out..."
+                    : "Logout"}
+                </span>
+
+                {!loggingOut && (
+                  <ChevronRight size={18} />
+                )}
+              </button>
+            </div>
+          </aside>
+
+          {/* Profile Form */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 md:col-span-2">
+            <div className="mb-7">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Profile Information
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Keep your contact information up to date.
+              </p>
             </div>
 
-            {/* Save */}
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50"
+            <form
+              onSubmit={handleSave}
+              className="space-y-6"
             >
-              {saving
-                ? "Saving..."
-                : "Save Changes"}
-            </button>
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="full-name"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Full Name
+                </label>
 
-          </form>
+                <div className="relative">
+                  <User
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
 
+                  <input
+                    id="full-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) =>
+                      setName(e.target.value)
+                    }
+                    placeholder="Enter your full name"
+                    className="w-full rounded-xl border border-gray-300 py-3 pl-10 pr-4 text-gray-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Email Address
+                </label>
+
+                <div className="relative">
+                  <Mail
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    id="email"
+                    type="email"
+                    value={profile.email}
+                    disabled
+                    className="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-100 py-3 pl-10 pr-4 text-gray-500"
+                  />
+                </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  Email changes are disabled for now.
+                </p>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="mb-2 block text-sm font-semibold text-gray-700"
+                >
+                  Phone Number
+                </label>
+
+                <div className="relative">
+                  <Phone
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) =>
+                      setPhone(e.target.value)
+                    }
+                    placeholder="e.g. 076123456"
+                    className="w-full rounded-xl border border-gray-300 py-3 pl-10 pr-4 text-gray-900 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+                  />
+                </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  Use a phone number you can be reached on for
+                  deliveries.
+                </p>
+              </div>
+
+              {/* Save */}
+              <div className="flex justify-end border-t border-gray-100 pt-6">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Save size={18} />
+
+                  {saving
+                    ? "Saving..."
+                    : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
-
       </div>
-
     </div>
   );
 }

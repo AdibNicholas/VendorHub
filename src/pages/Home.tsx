@@ -10,8 +10,8 @@ function Home() {
       <Hero />
       <SearchBar />
       <CategoryGrid />
-      <FeaturedStores />
       <LatestProducts />
+      <FeaturedStores />
     </>
   );
 }

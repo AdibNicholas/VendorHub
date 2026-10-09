@@ -22,6 +22,7 @@ import OrderSuccess from "../pages/OrderSuccess";
 import Account from "../pages/Account";
 import Orders from "../pages/Orders";
 import VendorOrders from "../pages/VendorOrders";
+import VendorProducts from "../pages/VendorProducts";
 import AdminUsers from "../pages/AdminUsers";
 import AdminVendors from "../pages/AdminVendors";
 import AdminVendorDetails from "../pages/AdminVendorDetails";
@@ -29,6 +30,8 @@ import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 import Support from "../pages/Support";
 import AdminSupport from "../pages/AdminSupport";
+import AdminMarketers from "../pages/AdminMarketers";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -65,6 +68,14 @@ function AppRoutes() {
   element={
     <ProtectedRoute allowedRole="vendor">
       <VendorDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/vendor/products"
+  element={
+    <ProtectedRoute allowedRole="vendor">
+      <VendorProducts />
     </ProtectedRoute>
   }
 />
@@ -120,6 +131,14 @@ function AppRoutes() {
   }
 />
 <Route
+  path="/admin/marketers"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminMarketers />
+    </ProtectedRoute>
+  }
+/>
+<Route
   path="/admin/vendors/:id"
   element={
     <ProtectedRoute allowedRole="admin">
@@ -151,14 +170,11 @@ function AppRoutes() {
     </ProtectedRoute>
   }
 />
-<Route
-  path="/store/:id"
-  element={
-    <ProtectedRoute allowedRole="vendor">
-      <ManageStore />
-    </ProtectedRoute>
-  }
-/>
+<Route path="/vendor/store/:id" element={
+  <ProtectedRoute allowedRole="vendor">
+    <ManageStore />
+  </ProtectedRoute>
+} />
 <Route
   path="/checkout"
   element={<Checkout />}

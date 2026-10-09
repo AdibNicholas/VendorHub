@@ -1,298 +1,311 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search, Store as StoreIcon, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
-interface Product {
+interface Store {
   id: string;
   name: string;
-  price: number;
-  stock: number;
-}
-
-interface Order {
-  id: string;
-  total: number;
-  status: string;
-  created_at: string;
+  description: string | null;
+  category: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
 }
 
 function Vendors() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchStores();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const { data: productsData, error: productsError } =
-        await supabase
-          .from("products")
-          .select("id, name, price, stock")
-          .order("name");
+  const fetchStores = async () => {
+    setLoading(true);
+    setError("");
 
-      if (productsError) {
-        console.error(productsError);
-      } else {
-        setProducts(productsData || []);
-      }
+    const { data, error } = await supabase
+      .from("stores")
+      .select(
+        "id, name, description, category, logo_url, banner_url"
+      )
+      .eq("is_active", true)
+      .order("created_at", {
+        ascending: false,
+      });
 
-      const { data: ordersData, error: ordersError } =
-        await supabase
-          .from("orders")
-          .select("id, total, status, created_at")
-          .order("created_at", {
-            ascending: false,
-          })
-          .limit(5);
-
-      if (ordersError) {
-        console.error(ordersError);
-      } else {
-        setOrders(ordersData || []);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
+    if (error) {
+      console.error("Error loading stores:", error);
+      setError("We couldn't load the stores. Please try again.");
+      setStores([]);
       setLoading(false);
+      return;
     }
+
+    setStores(data || []);
+    setLoading(false);
   };
 
-  const totalProducts = products.length;
+  const searchText = search.toLowerCase().trim();
 
-  const lowStockProducts = products.filter(
-    (product) => product.stock <= 5
-  ).length;
+  const filteredStores = stores.filter((store) => {
+    if (!searchText) {
+      return true;
+    }
 
-  const totalOrders = orders.length;
-
-  const totalRevenue = orders.reduce(
-    (total, order) => total + Number(order.total),
-    0
-  );
-
-  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl">
-          Loading vendor dashboard...
-        </p>
-      </div>
+      store.name.toLowerCase().includes(searchText) ||
+      store.category?.toLowerCase().includes(searchText) ||
+      store.description?.toLowerCase().includes(searchText)
     );
-  }
+  });
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-gray-50">
+      {/* HERO */}
+      <section className="bg-emerald-600 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-14">
+          <div className="flex items-center gap-2 text-emerald-100 font-semibold">
+            <StoreIcon size={18} />
+            <span>VendorHub Marketplace</span>
+          </div>
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-
-        <div>
-          <h1 className="text-4xl font-bold">
-            Vendor Dashboard
+          <h1 className="text-4xl md:text-5xl font-bold mt-3">
+            Explore Stores
           </h1>
 
-          <p className="text-gray-600 mt-2">
-            Manage your products and orders.
+          <p className="mt-4 max-w-2xl text-emerald-50 text-lg">
+            Discover stores from vendors across VendorHub
+            and find products that suit your needs.
           </p>
         </div>
+      </section>
 
-        <Link
-          to="/vendor/products"
-          className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 text-center"
-        >
-          Manage Products
-        </Link>
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* SEARCH */}
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-8">
+          <label className="block font-semibold mb-3">
+            Search Stores
+          </label>
 
-      </div>
+          <div className="relative">
+            <Search
+              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
 
-      {/* Statistics */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search stores, categories, or descriptions..."
+              className="w-full border border-gray-200 rounded-xl py-3 pl-11 pr-11 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
 
-        <div className="bg-white shadow rounded-xl p-6">
-          <p className="text-gray-500">
-            Total Products
-          </p>
-
-          <h2 className="text-3xl font-bold mt-2">
-            {totalProducts}
-          </h2>
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-700"
+                aria-label="Clear search"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="bg-white shadow rounded-xl p-6">
-          <p className="text-gray-500">
-            Recent Orders
-          </p>
+        {/* RESULTS HEADER */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              All Stores
+            </h2>
 
-          <h2 className="text-3xl font-bold mt-2">
-            {totalOrders}
-          </h2>
+            {!loading && !error && searchText && (
+              <p className="text-sm text-gray-500 mt-1">
+                Showing results for "{search}"
+              </p>
+            )}
+          </div>
+
+          {!loading && !error && (
+            <p className="text-gray-500">
+              {filteredStores.length} store
+              {filteredStores.length !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
 
-        <div className="bg-white shadow rounded-xl p-6">
-          <p className="text-gray-500">
-            Recent Revenue
-          </p>
+        {/* ERROR */}
+        {!loading && error && (
+          <div className="bg-white rounded-2xl shadow-sm p-10 text-center">
+            <div className="text-red-500 font-semibold text-lg">
+              Something went wrong
+            </div>
 
-          <h2 className="text-3xl font-bold text-emerald-600 mt-2">
-            Le {totalRevenue}
-          </h2>
-        </div>
+            <p className="text-gray-500 mt-2">
+              {error}
+            </p>
 
-        <div className="bg-white shadow rounded-xl p-6">
-          <p className="text-gray-500">
-            Low Stock
-          </p>
-
-          <h2 className="text-3xl font-bold text-orange-500 mt-2">
-            {lowStockProducts}
-          </h2>
-        </div>
-
-      </div>
-
-      {/* Products */}
-      <div className="bg-white shadow rounded-xl p-6 mt-8">
-
-        <div className="flex items-center justify-between mb-6">
-
-          <h2 className="text-2xl font-bold">
-            Products
-          </h2>
-
-          <Link
-            to="/vendor/products"
-            className="text-emerald-600 hover:underline"
-          >
-            View All
-          </Link>
-
-        </div>
-
-        {products.length === 0 ? (
-          <p className="text-gray-500">
-            No products found.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-
-            <table className="w-full text-left">
-
-              <thead>
-                <tr className="border-b">
-                  <th className="py-3">
-                    Product
-                  </th>
-
-                  <th className="py-3">
-                    Price
-                  </th>
-
-                  <th className="py-3">
-                    Stock
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {products.slice(0, 5).map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b last:border-b-0"
-                  >
-                    <td className="py-4 font-medium">
-                      {product.name}
-                    </td>
-
-                    <td className="py-4">
-                      Le {product.price}
-                    </td>
-
-                    <td className="py-4">
-                      <span
-                        className={
-                          product.stock <= 5
-                            ? "text-orange-600 font-semibold"
-                            : "text-green-600"
-                        }
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-
-              </tbody>
-
-            </table>
-
+            <button
+              type="button"
+              onClick={fetchStores}
+              className="mt-5 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
-      </div>
-
-      {/* Recent Orders */}
-      <div className="bg-white shadow rounded-xl p-6 mt-8">
-
-        <div className="flex items-center justify-between mb-6">
-
-          <h2 className="text-2xl font-bold">
-            Recent Orders
-          </h2>
-
-          <Link
-            to="/vendor/orders"
-            className="text-emerald-600 hover:underline"
-          >
-            View All
-          </Link>
-
-        </div>
-
-        {orders.length === 0 ? (
-          <p className="text-gray-500">
-            No orders yet.
-          </p>
-        ) : (
-          <div className="space-y-4">
-
-            {orders.map((order) => (
+        {/* LOADING */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
               <div
-                key={order.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b last:border-b-0 pb-4"
+                key={item}
+                className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse"
               >
+                <div className="h-40 bg-gray-200" />
 
-                <div>
-                  <p className="font-semibold">
-                    Order #{order.id.slice(0, 8)}
-                  </p>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gray-200" />
 
-                  <p className="text-sm text-gray-500">
-                    {new Date(
-                      order.created_at
-                    ).toLocaleDateString()}
-                  </p>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 bg-gray-200 rounded" />
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+
+                  <div className="h-4 bg-gray-200 rounded" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <div className="h-11 bg-gray-200 rounded-lg mt-5" />
                 </div>
-
-                <span className="font-semibold">
-                  Le {order.total}
-                </span>
-
-                <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 capitalize text-sm">
-                  {order.status}
-                </span>
-
               </div>
             ))}
-
           </div>
         )}
 
-      </div>
+        {/* EMPTY */}
+        {!loading &&
+          !error &&
+          filteredStores.length === 0 && (
+            <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 flex items-center justify-center">
+                <StoreIcon
+                  size={30}
+                  className="text-emerald-600"
+                />
+              </div>
 
+              <h3 className="text-xl font-bold mt-5">
+                No stores found
+              </h3>
+
+              <p className="text-gray-500 mt-2">
+                Try searching for another store or category.
+              </p>
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="mt-5 text-emerald-600 font-semibold hover:text-emerald-700"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+          )}
+
+        {/* STORE GRID */}
+        {!loading &&
+          !error &&
+          filteredStores.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStores.map((store) => (
+                <div
+                  key={store.id}
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition duration-300 flex flex-col"
+                >
+                  {/* BANNER */}
+                  <div className="h-40 bg-emerald-50 overflow-hidden">
+                    {store.banner_url ? (
+                      <img
+                        src={store.banner_url}
+                        alt={`${store.name} banner`}
+                        className="w-full h-full object-cover transition duration-300 hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-emerald-50">
+                        <div className="text-center">
+                          <StoreIcon
+                            size={32}
+                            className="mx-auto text-emerald-500"
+                          />
+
+                          <span className="block mt-2 text-emerald-600 font-semibold">
+                            VendorHub Store
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* DETAILS */}
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-4">
+                      {/* LOGO */}
+                      <div className="w-14 h-14 rounded-xl bg-emerald-100 overflow-hidden flex items-center justify-center shrink-0">
+                        {store.logo_url ? (
+                          <img
+                            src={store.logo_url}
+                            alt={`${store.name} logo`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xl font-bold text-emerald-700">
+                            {store.name
+                              .charAt(0)
+                              .toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* NAME */}
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-bold text-gray-900 truncate">
+                          {store.name}
+                        </h3>
+
+                        {store.category && (
+                          <p className="text-sm text-emerald-600 font-semibold mt-1">
+                            {store.category}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-gray-500 mt-4 line-clamp-2 flex-1">
+                      {store.description ||
+                        "Explore products from this VendorHub store."}
+                    </p>
+
+                    <Link
+                      to={`/store/${store.id}`}
+                      className="block text-center mt-5 bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition"
+                    >
+                      Visit Store
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+      </div>
     </div>
   );
 }

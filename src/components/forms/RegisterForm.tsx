@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import {supabase} from "../../lib/supabase";
-
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 
 function RegisterForm() {
+  const [searchParams] = useSearchParams();
+
+  const requestedRole = searchParams.get("role");
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -11,61 +14,104 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("customer");
   const [agreeTerms, setAgreeTerms] = useState(false);
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  
+  const [loading, setLoading] = useState(false);
 
-  if (password !== confirmPassword) {
+  useEffect(() => {
+    if (
+      requestedRole === "vendor" ||
+      requestedRole === "marketer" ||
+      requestedRole === "delivery"
+    ) {
+      setRole(requestedRole);
+    }
+  }, [requestedRole]);
 
-    alert("Passwords do not match!");
-    return;
-  }
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
 
-  if (!agreeTerms) {
-    alert("Please agree to the Terms & Conditions.");
-    return;
-  }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        phone,
-        role,
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (!agreeTerms) {
+      alert("Please agree to the Terms & Conditions.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          phone,
+          role,
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
- 
-alert("Account created successfully! Please check your email.");
+    if (error) {
+      setLoading(false);
+      alert(error.message);
+      return;
+    }
 
-console.log(data);
+    setLoading(false);
 
-  alert("Account created successfully! Please check your email.");
+    alert(
+      role === "vendor"
+        ? "Vendor account created successfully! Please check your email to verify your account."
+        : "Account created successfully! Please check your email to verify your account."
+    );
+  };
 
-  console.log(data);
-};
+  const getTitle = () => {
+    if (role === "vendor") {
+      return "Become a Vendor";
+    }
 
- 
+    if (role === "marketer") {
+      return "Become a Marketer";
+    }
+
+    if (role === "delivery") {
+      return "Join as a Delivery Rider";
+    }
+
+    return "Create Your VendorHub Account";
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-md mx-auto bg-white shadow-lg rounded-xl p-8 space-y-5"
+      className="w-full max-w-md mx-auto bg-white shadow-lg rounded-xl p-8 space-y-5"
     >
-      <h2 className="text-3xl font-bold text-center text-emerald-600">
-        Create Your VendorHub Account
-      </h2>
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-emerald-600">
+          {getTitle()}
+        </h2>
+
+        <p className="text-gray-500 mt-2 text-sm">
+          Join VendorHub and become part of the marketplace.
+        </p>
+      </div>
 
       {/* Full Name */}
       <div>
-        <label className="block mb-2 font-medium">Full Name</label>
+        <label className="block mb-2 font-medium">
+          Full Name
+        </label>
+
         <input
           type="text"
           placeholder="Enter your full name"
@@ -78,7 +124,10 @@ console.log(data);
 
       {/* Email */}
       <div>
-        <label className="block mb-2 font-medium">Email Address</label>
+        <label className="block mb-2 font-medium">
+          Email Address
+        </label>
+
         <input
           type="email"
           placeholder="Enter your email"
@@ -91,7 +140,10 @@ console.log(data);
 
       {/* Phone */}
       <div>
-        <label className="block mb-2 font-medium">Phone Number</label>
+        <label className="block mb-2 font-medium">
+          Phone Number
+        </label>
+
         <input
           type="tel"
           placeholder="Enter your phone number"
@@ -104,7 +156,10 @@ console.log(data);
 
       {/* Register As */}
       <div>
-        <label className="block mb-2 font-medium">Register As</label>
+        <label className="block mb-2 font-medium">
+          Register As
+        </label>
+
         <select
           value={role}
           onChange={(e) => setRole(e.target.value)}
@@ -119,7 +174,10 @@ console.log(data);
 
       {/* Password */}
       <div>
-        <label className="block mb-2 font-medium">Password</label>
+        <label className="block mb-2 font-medium">
+          Password
+        </label>
+
         <input
           type="password"
           placeholder="Create a password"
@@ -135,6 +193,7 @@ console.log(data);
         <label className="block mb-2 font-medium">
           Confirm Password
         </label>
+
         <input
           type="password"
           placeholder="Confirm your password"
@@ -146,36 +205,40 @@ console.log(data);
       </div>
 
       {/* Terms */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <input
           type="checkbox"
           checked={agreeTerms}
           onChange={(e) => setAgreeTerms(e.target.checked)}
+          className="mt-1"
         />
 
-        <label>
-          I agree to the Terms & Conditions
+        <label className="text-sm text-gray-600">
+          I agree to the Terms & Conditions.
         </label>
       </div>
 
       {/* Button */}
       <button
         type="submit"
-        className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition"
+        disabled={loading}
+        className="w-full bg-emerald-600 text-white py-3 rounded-lg hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        Create Account
+        {loading ? "Creating Account..." : "Create Account"}
       </button>
 
+      {/* Login */}
       <p className="text-center text-sm">
         Already have an account?{" "}
-        <Link to="/login" className="text-emerald-600 font-semibold">
-  Login
-</Link>
+        <Link
+          to="/login"
+          className="text-emerald-600 font-semibold hover:underline"
+        >
+          Login
+        </Link>
       </p>
     </form>
   );
 }
-
-
 
 export default RegisterForm;

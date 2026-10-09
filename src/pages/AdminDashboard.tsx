@@ -370,9 +370,9 @@ function AdminDashboard() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
 
           <div className="bg-white rounded-2xl shadow-sm border p-6">
-            <h3 className="font-bold text-lg">
+            <h2 className="font-bold text-lg">
               User Management
-            </h3>
+            </h2>
 
             <p className="text-gray-500 mt-2">
               Manage customers, vendors and platform users.
@@ -387,9 +387,9 @@ function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border p-6">
-            <h3 className="font-bold text-lg">
+            <h2 className="font-bold text-lg">
               Vendor Management
-            </h3>
+            </h2>
 
             <p className="text-gray-500 mt-2">
               Review vendors and manage marketplace stores.
@@ -404,9 +404,9 @@ function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border p-6">
-            <h3 className="font-bold text-lg">
+            <h2 className="font-bold text-lg">
               Product Management
-            </h3>
+            </h2>
 
             <p className="text-gray-500 mt-2">
               Monitor products and marketplace inventory.
