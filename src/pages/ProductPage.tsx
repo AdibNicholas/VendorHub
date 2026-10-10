@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
   Check,
   ShoppingCart,
   Store as StoreIcon,
